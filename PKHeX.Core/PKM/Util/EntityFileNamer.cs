@@ -45,9 +45,18 @@ public sealed class DefaultEntityNamer : IFileNamer<PKM>
     private static string GetRegular(PKM pk)
     {
         var chk = pk is ISanityChecksum s ? s.Checksum : Checksums.Add16(pk.Data[8..pk.SIZE_STORED]);
-        var form = pk.Form != 0 ? $"-{pk.Form:00}" : string.Empty;
+        var form = $"-{pk.Form:00}";
         var star = pk.IsShiny ? " ★" : string.Empty;
-        return $"{pk.Species:0000}{form}{star} - {pk.Nickname} - {chk:X4}{pk.EncryptionConstant:X8}";
+        var alpha = (pk is PA9 pa9 && pa9.IsAlpha) ? " α" : string.Empty;
+        var IV = $"{pk.IV_HP}_{pk.IV_ATK}_{pk.IV_DEF}_{pk.IV_SPA}_{pk.IV_SPD}_{pk.IV_SPE}";
+        var ballMappings = new Dictionary<int, string>
+        {
+            { 4, "poke" },
+            { 25, "dream" },
+            { 26, "beast" }
+        };
+        var ball = ballMappings.TryGetValue(pk.Ball, out var result) ? result : "other";
+        return $"{pk.Species:0000}{form}{star}{alpha} - {pk.Nickname} - {IV} - {ball} - {chk:X4}{pk.EncryptionConstant:X8}";
     }
 
     private static string GetGBPKM(GBPKM gb)
