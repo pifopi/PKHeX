@@ -1,0 +1,32 @@
+name: C# CI
+
+on: [push, pull_request, workflow_dispatch]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        configuration: [Debug, Release]
+
+    steps:
+    - uses: actions/checkout@v6
+      with:
+        repository: 'pifopi/PKHeX'
+        path: PKHex
+    - uses: actions/checkout@v6
+      with:
+        repository: 'pifopi/PKHeX-Plugins'
+        path: PKHeX-Plugins
+    - uses: actions/checkout@v6
+      with:
+        repository: 'pifopi/HOME-Live-Plugin'
+        path: HOME-Live-Plugin
+    - uses: microsoft/setup-msbuild@v2
+    - name: Generate binaries
+      run: |
+        PKHeX/build.ps1 -Configurations:${{ matrix.configuration }}
+    - uses: actions/upload-artifact@v6
+      with:
+        name: PKHeX for windows (${{ matrix.configuration }})
+        path: PKHeX/PKHeX.WinForms/bin/${{ matrix.configuration }}/net10.0-windows/win-x64
