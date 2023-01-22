@@ -46,6 +46,10 @@ public sealed record InventoryItem9a : InventoryItem, IItemFavorite, IItemNewFla
         Index = Count = 0;
         Flags = DefaultFlagValue;
         Pouch = PouchNone;
+
+        IsNew = false;
+        IsNewNotify = false;
+        IsNewShop = false;
     }
 
     /// <summary>

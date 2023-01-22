@@ -220,7 +220,6 @@ public abstract class InventoryPouch
 
         var newItem = Items[emptyIndex];
         newItem.Index = itemID;
-        newItem.SetNewDetails(0);
         return AddCountTo(bag, newItem, count);
     }
 
