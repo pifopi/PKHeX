@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 
@@ -22,6 +23,12 @@ public static class BoxUtil
         /// <returns>-1 if aborted, otherwise the amount of files dumped.</returns>
         public int DumpBoxes(string path, bool boxFolders = false)
         {
+            string pokemonList = "";
+            pokemonList += $"National dex,Form,Regional dex,French name,English name,Inside raids Poke,Inside raids Beast,Inside raids Dream,Outside raids Poke,Outside raids Beast,Outside raids Dream\n";
+
+            string filter = "[";
+            bool first = true;
+
             if (!sav.HasBox)
                 return -1;
 
@@ -51,7 +58,47 @@ public static class BoxUtil
 
                 File.WriteAllBytes(fn, pk.DecryptedPartyData);
                 ctr++;
+
+                var basePath = "C:\\Users\\dotte\\Documents\\GitHub\\PokemonDatabase\\SV\\living dex shiny\\";
+                var basePathInsideRaids = basePath + "inside raids\\";
+                var filesPokeInsideRaids = Directory.EnumerateFiles(basePathInsideRaids + "poke\\", $"{pk.Species:0000}-{pk.Form:00}*", SearchOption.AllDirectories);
+                var filesBeastInsideRaids = Directory.EnumerateFiles(basePathInsideRaids + "beast\\", $"{pk.Species:0000}-{pk.Form:00}*", SearchOption.AllDirectories);
+                var filesDreamInsideRaids = Directory.EnumerateFiles(basePathInsideRaids + "dream\\", $"{pk.Species:0000}-{pk.Form:00}*", SearchOption.AllDirectories);
+                var basePathOutsideRaids = basePath + "outside raids\\";
+                var filesPokeOutsideRaids = Directory.EnumerateFiles(basePathOutsideRaids + "poke\\", $"{pk.Species:0000}-{pk.Form:00}*", SearchOption.AllDirectories);
+                var filesBeastOutsideRaids = Directory.EnumerateFiles(basePathOutsideRaids + "beast\\", $"{pk.Species:0000}-{pk.Form:00}*", SearchOption.AllDirectories);
+                var filesDreamOutsideRaids = Directory.EnumerateFiles(basePathOutsideRaids + "dream\\", $"{pk.Species:0000}-{pk.Form:00}*", SearchOption.AllDirectories);
+
+                var french_name = SpeciesName.GetSpeciesNameGeneration(pk.Species, (int)LanguageID.French, pk.Format);
+                var english_name = SpeciesName.GetSpeciesNameGeneration(pk.Species, (int)LanguageID.English, pk.Format);
+                pokemonList += $"{pk.Species:0000},{pk.Form:00},{((PersonalInfo9SV)pk.PersonalInfo).DexPaldea},{french_name},{english_name}";
+                pokemonList += $",{filesPokeInsideRaids.Count()},{filesBeastInsideRaids.Count()},{filesDreamInsideRaids.Count()}";
+                pokemonList += $",{filesPokeOutsideRaids.Count()},{filesBeastOutsideRaids.Count()},{filesDreamOutsideRaids.Count()}\n";
+
+                if (!filesPokeInsideRaids.Any() &&
+                    !filesBeastInsideRaids.Any() &&
+                    !filesDreamInsideRaids.Any() &&
+                    !filesPokeOutsideRaids.Any() &&
+                    !filesBeastOutsideRaids.Any() &&
+                    !filesDreamOutsideRaids.Any())
+                {
+                    if (first)
+                    {
+                        first = false;
+                    }
+                    else
+                    {
+                        filter += ",";
+                    }
+                    filter += $"{{\"Name\":\"{pk.Species:0000} {french_name} {english_name} shiny\",\"Species\":{pk.Species},\"Form\":{pk.Form},\"Shiny\":true,\"Enabled\":true}}";
+                }
             }
+
+            File.WriteAllText("pokemon_list.csv", pokemonList);
+
+            filter += "]";
+            File.WriteAllText("filters.json", filter);
+
             return ctr;
         }
 
