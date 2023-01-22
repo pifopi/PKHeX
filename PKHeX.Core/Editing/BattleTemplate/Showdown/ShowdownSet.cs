@@ -130,7 +130,30 @@ public sealed class ShowdownSet : IBattleTemplate
     {
         int countMoves = 0;
         bool first = true;
+
+        List<string> linesUpdated = new();
+        bool shouldAddExtra = true;
         foreach (var line in lines)
+        {
+            if (line.StartsWith("Tera Type: ") ||
+                line.StartsWith("Level: "))
+            {
+                continue;
+            }
+
+            linesUpdated.Add(line.ToString());
+
+            if (shouldAddExtra)
+            {
+                linesUpdated.Add("Level: 100");
+                //linesUpdated.Add("Shiny: Yes");
+                linesUpdated.Add("Ball: Poke Ball");
+                linesUpdated.Add("Language: French");
+                shouldAddExtra = false;
+            }
+        }
+
+        foreach (var line in linesUpdated)
         {
             var trim = line.Trim();
             if (IsLengthOutOfRange(trim))
