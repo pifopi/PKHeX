@@ -1,0 +1,57 @@
+name: C# CI
+
+on: [push, pull_request, workflow_dispatch]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        configuration: [Debug, Release]
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        repository: 'pifopi/PKHeX'
+        path: PKHex
+    - uses: actions/checkout@v4
+      with:
+        repository: 'pifopi/PKHeX-Plugins'
+        path: PKHeX-Plugins
+    - uses: actions/checkout@v4
+      with:
+        repository: 'pifopi/HOME-Live-Plugin'
+        path: HOME-Live-Plugin
+    - uses: microsoft/setup-msbuild@v2
+    - name: Generate binaries
+      run: |
+        cd PKHeX
+        dotnet restore PKHeX.sln /p:Configuration=${{ matrix.configuration }} /p:Platform="Any CPU"
+        MSBuild.exe PKHeX.WinForms/PKHeX.WinForms.csproj /p:Configuration=${{ matrix.configuration }}
+
+        cd ../PKHeX-Plugins
+        dotnet restore /p:Configuration=${{ matrix.configuration }} /p:Platform="Any CPU"
+        MSBuild.exe AutoLegalityMod/AutoModPlugins.csproj /p:Configuration=${{ matrix.configuration }} 
+        robocopy AutoLegalityMod\bin\${{ matrix.configuration }}\net10.0-windows ..\PKHeX\PKHeX.WinForms\bin\${{ matrix.configuration }}\net10.0-windows\win-x64\plugins\ AutoModPlugins.dll
+        $PKHeXPlugins = $lastexitcode
+        write-host "Robocopy PKHeX-Plugins exited with exit code:" $PKHeXPlugins
+
+        cd ../HOME-Live-Plugin
+        dotnet restore /p:Configuration=${{ matrix.configuration }} /p:Platform="Any CPU"
+        MSBuild.exe HomeLive.Plugins/HomeLive.Plugins.csproj /p:Configuration=${{ matrix.configuration }} 
+        robocopy HomeLive.Plugins\bin\${{ matrix.configuration }}\net10.0-windows7.0 ..\PKHeX\PKHeX.WinForms\bin\${{ matrix.configuration }}\net10.0-windows\win-x64\plugins\ HomeLive.Plugins.dll
+        $HOMELivePlugin = $lastexitcode
+        write-host "Robocopy HOME-Live-Plugin exited with exit code:" $HOMELivePlugin
+
+        if ($PKHeXPlugins -ne 1 -or $HOMELivePlugin -ne 1)
+        {
+          exit 1
+        }
+        else
+        {
+          exit 0
+        }
+    - uses: actions/upload-artifact@v4
+      with:
+        name: PKHeX for windows (${{ matrix.configuration }})
+        path: PKHeX/PKHeX.WinForms/bin/${{ matrix.configuration }}/net10.0-windows/win-x64
