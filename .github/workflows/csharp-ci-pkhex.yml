@@ -1,0 +1,43 @@
+name: C# CI PKHex
+
+on: [push, pull_request, workflow_dispatch]
+
+jobs:
+  build:
+    runs-on: windows-2022
+    strategy:
+      matrix:
+        configuration: [Debug, Release]
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        repository: 'pifopi/PKHeX'
+        path: PKHex
+    - uses: actions/checkout@v4
+      with:
+        repository: 'pifopi/PKHeX-Plugins'
+        path: PKHeX-Plugins
+    - uses: microsoft/setup-msbuild@v1
+    - name: Generate binaries
+      run: |
+        cd PKHeX
+        dotnet restore /p:Configuration=${{ matrix.configuration }} /p:Platform="Any CPU"
+        MSBuild.exe PKHeX.WinForms/PKHeX.WinForms.csproj /p:Configuration=${{ matrix.configuration }}
+        cd ../PKHeX-Plugins
+        dotnet restore /p:Configuration=${{ matrix.configuration }} /p:Platform="Any CPU"
+        MSBuild.exe AutoLegalityMod/AutoModPlugins.csproj /p:Configuration=${{ matrix.configuration }} 
+        robocopy AutoLegalityMod\bin\${{ matrix.configuration }}\net8.0-windows ..\PKHeX\PKHeX.WinForms\bin\x64\${{ matrix.configuration }}\net8.0-windows\win-x64\plugins\ AutoModPlugins.dll LibUsbDotNet.LibUsbDotNet.dll NtrSharp.dll PKHeX.Core.AutoMod.dll PKHeX.Core.Enhancements.dll PKHeX.Core.Injection.dll
+        write-host "Robocopy exited with exit code:" $lastexitcode
+        if ($lastexitcode -eq 1)
+        {
+          exit 0
+        }
+        else
+        {
+          exit 1
+        }
+    - uses: actions/upload-artifact@v4
+      with:
+        name: PKHeX for windows (${{ matrix.configuration }})
+        path: PKHeX/PKHeX.WinForms/bin/x64/${{ matrix.configuration }}/net8.0-windows/win-x64
