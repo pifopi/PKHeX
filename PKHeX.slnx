@@ -12,4 +12,6 @@
   <Project Path="PKHeX.Drawing.PokeSprite/PKHeX.Drawing.PokeSprite.csproj" />
   <Project Path="PKHeX.Drawing/PKHeX.Drawing.csproj" />
   <Project Path="PKHeX.WinForms/PKHeX.WinForms.csproj" />
+  <Project Path="../PKHeX-Plugins/AutoLegalityMod/AutoModPlugins.csproj" />
+  <Project Path="../HOME-Live-Plugin/HomeLive.Plugins/HomeLive.Plugins.csproj" />
 </Solution>
