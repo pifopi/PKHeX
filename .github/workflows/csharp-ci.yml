@@ -10,15 +10,15 @@ jobs:
         configuration: [Debug, Release]
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
       with:
         repository: 'pifopi/PKHeX'
         path: PKHex
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
       with:
         repository: 'pifopi/PKHeX-Plugins'
         path: PKHeX-Plugins
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
       with:
         repository: 'pifopi/HOME-Live-Plugin'
         path: HOME-Live-Plugin
